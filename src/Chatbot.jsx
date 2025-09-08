@@ -11,6 +11,7 @@ export default function Chatbot() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
+  const [isLoadingFromHistory, setIsLoadingFromHistory] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -44,12 +45,23 @@ export default function Chatbot() {
 
   // Save conversation to history
   useEffect(() => {
+    // Don't save to history if we're currently loading from history
+    if (isLoadingFromHistory) {
+      setIsLoadingFromHistory(false);
+      return;
+    }
+    
     if (messages.length > 1 && messages[messages.length - 1].sender === "bot") {
       const lastUserMessage = messages.slice().reverse().find(msg => msg.sender === "user");
       if (lastUserMessage) {
         const title = lastUserMessage.text.length > 30 ? lastUserMessage.text.substring(0, 30) + "..." : lastUserMessage.text;
         setConversationHistory(prev => {
-          const exists = prev.find(conv => conv.messages[0]?.text === lastUserMessage.text);
+          // Better duplicate detection: check if this exact conversation already exists
+          const exists = prev.find(conv => 
+            conv.title === title && 
+            conv.messages.length === messages.length &&
+            conv.messages[conv.messages.length - 1]?.text === messages[messages.length - 1]?.text
+          );
           if (!exists) {
             return [{ id: Date.now(), title, messages: [...messages], timestamp: new Date() }, ...prev.slice(0, 9)];
           }
@@ -57,9 +69,10 @@ export default function Chatbot() {
         });
       }
     }
-  }, [messages]);
+  }, [messages, isLoadingFromHistory]);
 
   const loadConversation = (conv) => {
+    setIsLoadingFromHistory(true);
     setSelectedConversation(conv);
     setMessages(conv.messages);
   };
