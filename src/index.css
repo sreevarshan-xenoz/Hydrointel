@@ -325,17 +325,19 @@
 
 /* Mic button placed to the left of the input */
 .voice-btn.mic-left {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 8px !important;
   border-radius: 50%;
   background-color: #e5e7eb;
   color: #374151;
   border: none;
   cursor: pointer;
   flex-shrink: 0;
+  transition: background-color 0.2s;
 }
 
 .voice-btn.mic-left svg {
@@ -344,10 +346,15 @@
   height: 18px;
 }
 
+.voice-btn.mic-left:hover:not(.listening) {
+  background-color: #d1d5db;
+}
+
 /* When mic is active */
 .voice-btn.mic-left.listening {
-  background-color: #ef4444;
-  color: white;
+  background-color: #ef4444 !important;
+  color: white !important;
+  animation: pulse 2s infinite;
 }
 
 /* Add left padding to input so text doesn't overlap the mic on small widths */
