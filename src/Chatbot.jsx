@@ -12,6 +12,7 @@ export default function Chatbot() {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
   const [isLoadingFromHistory, setIsLoadingFromHistory] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -120,30 +121,44 @@ export default function Chatbot() {
     setIsListening(!isListening);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarVisible(!isSidebarVisible);
+  };
+
   return (
     <div className="app-container">
       {/* Sidebar */}
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <h2 className="sidebar-title">Conversations</h2>
-          <button className="new-chat-btn" onClick={startNewConversation}>New Chat</button>
+      {isSidebarVisible && (
+        <div className="sidebar">
+          <div className="sidebar-header">
+            <h2 className="sidebar-title">Conversations</h2>
+            <button className="new-chat-btn" onClick={startNewConversation}>New Chat</button>
+          </div>
+          <div className="conversation-list">
+            {conversationHistory.length === 0 ? (
+              <p className="no-conversations">No conversation history yet</p>
+            ) : conversationHistory.map(conv => (
+              <div key={conv.id} className={`conversation-item ${selectedConversation?.id === conv.id ? "selected" : ""}`} onClick={() => loadConversation(conv)}>
+                <div className="conversation-title">{conv.title}</div>
+                <div className="conversation-timestamp">{conv.timestamp.toLocaleDateString()} {conv.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="conversation-list">
-          {conversationHistory.length === 0 ? (
-            <p className="no-conversations">No conversation history yet</p>
-          ) : conversationHistory.map(conv => (
-            <div key={conv.id} className={`conversation-item ${selectedConversation?.id === conv.id ? "selected" : ""}`} onClick={() => loadConversation(conv)}>
-              <div className="conversation-title">{conv.title}</div>
-              <div className="conversation-timestamp">{conv.timestamp.toLocaleDateString()} {conv.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Main Chat Area */}
       <div className="main-area">
         <div className="chat-header">
-          <h1 className="chat-title">HydroIntel Chatbot</h1>
+          <div className="header-left">
+            <button className="sidebar-toggle-btn" onClick={toggleSidebar} aria-label={isSidebarVisible ? "Hide sidebar" : "Show sidebar"}>
+              {/* Hamburger menu icon */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <h1 className="chat-title">HydroIntel Chatbot</h1>
+          </div>
           <div className="header-actions">
             <button className="new-chat-btn" onClick={startNewConversation}>New Conversation</button>
           </div>
