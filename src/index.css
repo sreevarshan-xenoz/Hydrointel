@@ -238,7 +238,8 @@
 }
 
 .message-time.bot {
-  color: #6b7280;
+  color: #475569; /* Improved contrast ratio: 7.1:1 (meets WCAG AA) */
+  font-weight: 500;
 }
 
 .message-time.user {
@@ -320,6 +321,38 @@
   max-width: 960px;
   margin: 8px auto 0;
   text-align: center;
+}
+
+/* Mic button placed to the left of the input */
+.voice-btn.mic-left {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #374151;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.voice-btn.mic-left svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+/* When mic is active */
+.voice-btn.mic-left.listening {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Add left padding to input so text doesn't overlap the mic on small widths */
+.message-input.with-mic {
+  padding-left: 16px;
 }
 
 .listening-badge {

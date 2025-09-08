@@ -1,5 +1,6 @@
 // File: src/Chatbot.jsx
 import { useState, useRef, useEffect } from "react";
+import { useCallback } from "react";
 import './index.css';
 
 export default function Chatbot() {
@@ -91,6 +92,29 @@ export default function Chatbot() {
       setIsTyping(false);
     }, 1500);
   };
+  const handleSend = useCallback((text = input) => {
+    if (!text.trim()) return;
+    const newMessage = { sender: "user", text, timestamp: new Date() };
+    setMessages(prev => [...prev, newMessage]);
+    setInput("");
+    setIsTyping(true);
+
+    setTimeout(() => {
+      let botResponse = "";
+      const lowerText = text.toLowerCase();
+      if (lowerText.includes("water level") || lowerText.includes("groundwater")) {
+        botResponse = `Based on the latest data, groundwater levels in "${text}" show seasonal variations with an average depth of 15.3 meters. Would you like more specific data?`;
+      } else if (lowerText.includes("thank")) {
+        botResponse = "You're welcome! Feel free to ask about any other groundwater-related topics. 💧";
+      } else if (lowerText.includes("help")) {
+        botResponse = "I can help you with groundwater level data, trends, seasonal variations, and regional comparisons. What would you like to know?";
+      } else {
+        botResponse = `I found some information related to "${text}". Groundwater monitoring shows that levels vary based on seasonal rainfall, human usage, and geological factors. Would you like me to elaborate?`;
+      }
+      setMessages(prev => [...prev, { sender: "bot", text: botResponse, timestamp: new Date() }]);
+      setIsTyping(false);
+    }, 1500);
+  }, [input]);
 
   const toggleVoiceRecognition = () => {
     if (!recognition) return;
@@ -124,11 +148,6 @@ export default function Chatbot() {
         <div className="chat-header">
           <h1 className="chat-title">HydroIntel Chatbot</h1>
           <div className="header-actions">
-            {recognition && (
-              <button className={`voice-btn ${isListening ? "listening" : ""}`} onClick={toggleVoiceRecognition}>
-                {isListening ? "Stop" : "Voice"}
-              </button>
-            )}
             <button className="new-chat-btn" onClick={startNewConversation}>New Conversation</button>
           </div>
         </div>
@@ -151,10 +170,25 @@ export default function Chatbot() {
 
         <div className="input-area">
           <div className="input-wrapper">
+            {recognition && (
+              <button
+                className={`voice-btn ${isListening ? "listening" : ""} mic-left`}
+                onClick={toggleVoiceRecognition}
+                aria-label={isListening ? "Stop voice input" : "Start voice input"}
+                title={isListening ? "Stop" : "Voice"}
+              >
+                {/* Mic SVG icon */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M19 11a7 7 0 0 1-14 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 19v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
             <input
               ref={inputRef}
               type="text"
-              className="message-input"
+              className={`message-input ${recognition ? 'with-mic' : ''}`}
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="Type a message about groundwater levels..."
