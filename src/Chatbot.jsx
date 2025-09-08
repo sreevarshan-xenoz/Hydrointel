@@ -1,6 +1,4 @@
-// File: src/Chatbot.jsx
-import { useState, useRef, useEffect } from "react";
-import { useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import './index.css';
 
 export default function Chatbot() {
@@ -13,24 +11,27 @@ export default function Chatbot() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const handleSendRef = useRef(null);
 
-  // Initialize speech recognition
+  // Initialize speech recognition once
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = 'en-US';
-      
+
       recognitionInstance.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
-        handleSend(transcript);
+        if (handleSendRef.current) handleSendRef.current(transcript);
       };
-      
+
       recognitionInstance.onend = () => setIsListening(false);
       setRecognition(recognitionInstance);
     }
@@ -69,52 +70,35 @@ export default function Chatbot() {
     setInput("");
   };
 
-  const handleSend = (text = input) => {
-    if (!text.trim()) return;
-    const newMessage = { sender: "user", text, timestamp: new Date() };
+  const handleSend = useCallback((text) => {
+    const messageText = text ?? input;
+    if (!messageText.trim()) return;
+    const newMessage = { sender: "user", text: messageText, timestamp: new Date() };
     setMessages(prev => [...prev, newMessage]);
     setInput("");
     setIsTyping(true);
 
     setTimeout(() => {
       let botResponse = "";
-      const lowerText = text.toLowerCase();
+      const lowerText = messageText.toLowerCase();
       if (lowerText.includes("water level") || lowerText.includes("groundwater")) {
-        botResponse = `Based on the latest data, groundwater levels in "${text}" show seasonal variations with an average depth of 15.3 meters. Would you like more specific data?`;
+        botResponse = `Based on the latest data, groundwater levels in "${messageText}" show seasonal variations with an average depth of 15.3 meters. Would you like more specific data?`;
       } else if (lowerText.includes("thank")) {
         botResponse = "You're welcome! Feel free to ask about any other groundwater-related topics. 💧";
       } else if (lowerText.includes("help")) {
         botResponse = "I can help you with groundwater level data, trends, seasonal variations, and regional comparisons. What would you like to know?";
       } else {
-        botResponse = `I found some information related to "${text}". Groundwater monitoring shows that levels vary based on seasonal rainfall, human usage, and geological factors. Would you like me to elaborate?`;
-      }
-      setMessages(prev => [...prev, { sender: "bot", text: botResponse, timestamp: new Date() }]);
-      setIsTyping(false);
-    }, 1500);
-  };
-  const handleSend = useCallback((text = input) => {
-    if (!text.trim()) return;
-    const newMessage = { sender: "user", text, timestamp: new Date() };
-    setMessages(prev => [...prev, newMessage]);
-    setInput("");
-    setIsTyping(true);
-
-    setTimeout(() => {
-      let botResponse = "";
-      const lowerText = text.toLowerCase();
-      if (lowerText.includes("water level") || lowerText.includes("groundwater")) {
-        botResponse = `Based on the latest data, groundwater levels in "${text}" show seasonal variations with an average depth of 15.3 meters. Would you like more specific data?`;
-      } else if (lowerText.includes("thank")) {
-        botResponse = "You're welcome! Feel free to ask about any other groundwater-related topics. 💧";
-      } else if (lowerText.includes("help")) {
-        botResponse = "I can help you with groundwater level data, trends, seasonal variations, and regional comparisons. What would you like to know?";
-      } else {
-        botResponse = `I found some information related to "${text}". Groundwater monitoring shows that levels vary based on seasonal rainfall, human usage, and geological factors. Would you like me to elaborate?`;
+        botResponse = `I found some information related to "${messageText}". Groundwater monitoring shows that levels vary based on seasonal rainfall, human usage, and geological factors. Would you like me to elaborate?`;
       }
       setMessages(prev => [...prev, { sender: "bot", text: botResponse, timestamp: new Date() }]);
       setIsTyping(false);
     }, 1500);
   }, [input]);
+
+  // Keep ref updated so recognition callback uses latest handler
+  useEffect(() => { 
+    handleSendRef.current = handleSend; 
+  }, [handleSend]);
 
   const toggleVoiceRecognition = () => {
     if (!recognition) return;
@@ -194,7 +178,7 @@ export default function Chatbot() {
               placeholder="Type a message about groundwater levels..."
               onKeyDown={e => e.key === "Enter" && handleSend()}
             />
-            <button className="send-btn" onClick={handleSend} disabled={!input.trim()}>Send</button>
+            <button className="send-btn" onClick={() => handleSend()} disabled={!input.trim()}>Send</button>
           </div>
         </div>
 
